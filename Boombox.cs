@@ -48,30 +48,6 @@ namespace Oxide.Plugins
             _config = Config.ReadObject<PluginConfig>();
         }
 
-        /*
-        private class Settings
-        {
-            [JsonProperty(PropertyName = "Whitelist")]
-            public bool Whitelist = true;
-
-            [JsonProperty(PropertyName = "Whitelisted Domains")]
-            public List<string> WhitelistedDomains = new List<string>()
-            {
-                "stream.zeno.fm"
-            };
-
-            [JsonProperty(PropertyName = "Boombox Deployed Require Power")]
-            public bool BoomboxDeployedReqPower = true;
-
-            [JsonProperty(PropertyName = "Preset Stations")]
-            public Dictionary<string, string> PresetStations = new Dictionary<string, string>()
-            {
-                { "Country Hits", "http://crystalout.surfernetwork.com:8001/KXBZ_MP3" },
-                { "Todays Hits", "https://rfcmedia.streamguys1.com/MusicPulsePremium.mp3"},
-                { "Pop Hits", "https://rfcmedia.streamguys1.com/newpophitspremium.mp3" }
-            };
-        }
-        */
         protected override void LoadDefaultConfig() => _config = GetDefaultConfig();
 
         protected override void LoadConfig()
@@ -249,7 +225,7 @@ namespace Oxide.Plugins
                     return false;
                 }
 
-                
+
 
                 boombox.BoxController.ServerTogglePlay(false);
                 SetBoomBoxServerIp(boombox, station);
@@ -285,17 +261,15 @@ namespace Oxide.Plugins
             }
         }
 
-        object OnEntityTakeDamage(BoomBox boomBox, HitInfo info)
+        void OnEntitySpawned(DeployableBoomBox boombox)
         {
-            if (!_config.DeployedBoomboxImmortal)
-                return null;
-
-            if (info.damageTypes.Has(Rust.DamageType.Decay))
+            if (!_config.BoomboxDeployedReqPower)
             {
-                Puts("Took damage");
+                NextTick(() =>
+                {
+                    boombox.SetFlag(IOEntity.Flag_HasPower, true);
+                });
             }
-
-            return null;
         }
 
         object OnEntityTakeDamage(DeployableBoomBox boomBox, HitInfo info)
@@ -327,7 +301,7 @@ namespace Oxide.Plugins
             if (Physics.Raycast(player.eyes.HeadRay(), out hit, 5))
             {
                 BaseEntity entity = hit.GetEntity();
-                
+
                 if (entity is DeployableBoomBox)
                     boombox = entity as DeployableBoomBox;
             }
