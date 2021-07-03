@@ -16,6 +16,7 @@ namespace Oxide.Plugins
     {
         private const string UsePerm = "boombox.customurluse";
         private const string StationUsePerm = "boombox.stationsuse";
+        private const string AdminUsePerm = "boombox.ad,om";
 
         private PropertyInfo _serverIpinfo = typeof(BoomBox).GetProperty("CurrentRadioIp");
         Settings config;
@@ -39,6 +40,7 @@ namespace Oxide.Plugins
         {
             permission.RegisterPermission(UsePerm, this);
             permission.RegisterPermission(StationUsePerm, this);
+            permission.RegisterPermission(AdminUsePerm, this);
             AddCovalenceCommand("boombox", nameof(boomboxCMD));
             AddCovalenceCommand("stations", nameof(stationsCMD));
             AddCovalenceCommand("station", nameof(stationCMD));
@@ -154,7 +156,7 @@ namespace Oxide.Plugins
             if (!args[0].StartsWith("http"))
                 args[0] = $"https://{args[0]}";
 
-            if (config.Whitelist && !limitedURLS.IsMatch(args[0]))
+            if (config.Whitelist && !limitedURLS.IsMatch(args[0]) && !permission.UserHasPermission(player.Id, AdminUsePerm) && !player.IsAdmin)
             {
                 player.Reply("You must use an accepted URL/Domain");
                 return;
