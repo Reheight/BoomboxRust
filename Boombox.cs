@@ -24,6 +24,7 @@ namespace Oxide.Plugins
         string presetStationsList;
 
         Dictionary<int, string> stationsNumbered = new Dictionary<int, string>();
+        Dictionary<int, string> stationsNumberedName = new Dictionary<int, string>();
 
         private void SetBoomBoxServerIp(BoomBox box, string ip)
         {
@@ -91,6 +92,7 @@ namespace Oxide.Plugins
                 stationsBuilder.Append(index.ToString()).Append(". ").AppendLine(item.Key);
 
                 stationsNumbered[index] = item.Value;
+                stationsNumberedName[index] = item.Key;
                 index++;
             }
 
@@ -132,7 +134,7 @@ namespace Oxide.Plugins
 
             switchStation(player.Object as BasePlayer, stationURL);
 
-            player.Reply($"You are listening to station [#ffcc00]#{index}[/#]!");
+            player.Reply($"You are listening to station [#ffcc00]#{index} ({stationsNumberedName[index]})[/#]!");
         }
 
         private void boomboxCMD(IPlayer player, string cmd, string[] args)
@@ -180,11 +182,11 @@ namespace Oxide.Plugins
                 boombox.BoxController.ServerTogglePlay(false);
                 SetBoomBoxServerIp(boombox, station);
 
-                player.ChatMessage(boombox.ToEntity().DesiredPower().ToString());
-
                 if (config.BoomboxDeployedReqPower)
+                {
                     if (boombox.ToEntity().currentEnergy == boombox.PowerUsageWhilePlaying)
                         boombox.BoxController.ServerTogglePlay(true);
+                }                    
                 else
                     boombox.BoxController.ServerTogglePlay(true);
             }
