@@ -172,7 +172,6 @@ namespace Oxide.Plugins
 
                 boombox.BoxController.ServerTogglePlay(false);
                 SetBoomBoxServerIp(boombox, station);
-                boombox.BoxController.ServerTogglePlay(true);
             }
             else
             {
