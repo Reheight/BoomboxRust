@@ -4,7 +4,6 @@ using UnityEngine;
 using System.Reflection;
 using System.Collections.Generic;
 using System;
-using Oxide.Core;
 using System.Text.RegularExpressions;
 using System.Text;
 using System.Linq;
@@ -136,6 +135,12 @@ namespace Oxide.Plugins
             [JsonProperty(PropertyName = "Preset Stations", Order = 3)]
             public Dictionary<string, string> PresetStations { get; set; }
 
+            [JsonProperty(PropertyName = "Deployed Boombox Never Decays", Order = 4)]
+            public bool DeployedBoomboxImmortal { get; set; }
+
+            [JsonProperty(PropertyName = "Handheld Boombox Never Breaks", Order = 5)]
+            public bool HandheldBoomboxImmortal { get; set; }
+
             public string ToJson() => JsonConvert.SerializeObject(this);
 
             public Dictionary<string, object> ToDictionary() => JsonConvert.DeserializeObject<Dictionary<string, object>>(ToJson());
@@ -156,7 +161,9 @@ namespace Oxide.Plugins
                     { "Country Hits", "http://crystalout.surfernetwork.com:8001/KXBZ_MP3" },
                     { "Todays Hits", "https://rfcmedia.streamguys1.com/MusicPulsePremium.mp3" },
                     { "Pop Hits", "https://rfcmedia.streamguys1.com/newpophitspremium.mp3" }
-                }
+                },
+                DeployedBoomboxImmortal = false,
+                HandheldBoomboxImmortal = false
             };
         }
 
@@ -242,6 +249,8 @@ namespace Oxide.Plugins
                     return false;
                 }
 
+                
+
                 boombox.BoxController.ServerTogglePlay(false);
                 SetBoomBoxServerIp(boombox, station);
 
@@ -265,6 +274,43 @@ namespace Oxide.Plugins
             return true;
         }
 
+        void OnLoseCondition(Item item, ref float amount)
+        {
+            if (item == null)
+                return;
+
+            if (item.info.shortname == "fun.boomboxportable" && _config.HandheldBoomboxImmortal)
+            {
+                amount = 0f;
+            }
+        }
+
+        object OnEntityTakeDamage(BoomBox boomBox, HitInfo info)
+        {
+            if (!_config.DeployedBoomboxImmortal)
+                return null;
+
+            if (info.damageTypes.Has(Rust.DamageType.Decay))
+            {
+                Puts("Took damage");
+            }
+
+            return null;
+        }
+
+        object OnEntityTakeDamage(DeployableBoomBox boomBox, HitInfo info)
+        {
+            if (!_config.DeployedBoomboxImmortal)
+                return null;
+
+            if (info.damageTypes.Has(Rust.DamageType.Decay))
+            {
+                NextTick(() => boomBox.SetHealth(100f));
+            }
+
+            return null;
+        }
+
         private bool IsAdministrator(BasePlayer player)
         {
             if (!permission.UserHasPermission(player.UserIDString, AdminUsePerm) && !player.IsAdmin)
@@ -281,6 +327,7 @@ namespace Oxide.Plugins
             if (Physics.Raycast(player.eyes.HeadRay(), out hit, 5))
             {
                 BaseEntity entity = hit.GetEntity();
+                
                 if (entity is DeployableBoomBox)
                     boombox = entity as DeployableBoomBox;
             }
