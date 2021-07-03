@@ -10,12 +10,12 @@ using System.Text;
 
 namespace Oxide.Plugins
 {
-    [Info("BoomboxURL", "Reheight/RyanJD", "1.0.0")]
+    [Info("Boombox", "Reheight/RyanJD", "1.0.0")]
     [Description("Allows players to easily set the url of a boombox.")]
-    public class BoomboxURL : RustPlugin
+    public class Boombox : RustPlugin
     {
-        private const string UsePerm = "boomboxurl.customurluse";
-        private const string StationUsePerm = "boomboxurl.stationsuse";
+        private const string UsePerm = "boombox.customurluse";
+        private const string StationUsePerm = "boombox.stationsuse";
 
         private PropertyInfo _serverIpinfo = typeof(BoomBox).GetProperty("CurrentRadioIp");
         Settings config;
