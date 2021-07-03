@@ -54,6 +54,9 @@ namespace Oxide.Plugins
                 "stream.zeno.fm"
             };
 
+            [JsonProperty(PropertyName = "Boombox Deployed Require Power")]
+            public bool BoomboxDeployedReqPower = true;
+
             [JsonProperty(PropertyName = "Preset Stations")]
             public Dictionary<string, string> PresetStations = new Dictionary<string, string>()
             {
@@ -128,11 +131,13 @@ namespace Oxide.Plugins
             }
 
             switchStation(player.Object as BasePlayer, stationURL);
+
+            player.Reply($"You are listening to station [#ffcc00]#{index}[/#]!");
         }
 
         private void boomboxCMD(IPlayer player, string cmd, string[] args)
         {
-            if (!permission.UserHasPermission(player.Id, UsePerm)  && !player.IsAdmin)
+            if (!permission.UserHasPermission(player.Id, UsePerm) && !player.IsAdmin)
             {
                 player.Reply("You do not have permission to use this command!");
                 return;
@@ -154,6 +159,8 @@ namespace Oxide.Plugins
             }
 
             switchStation(player.Object as BasePlayer, args[0]);
+
+            player.Reply($"You are now streaming audio from URL:\n[#ffcc00]{args[0]}[/#]");
         }
 
         private void switchStation(BasePlayer player, string station)
@@ -172,6 +179,14 @@ namespace Oxide.Plugins
 
                 boombox.BoxController.ServerTogglePlay(false);
                 SetBoomBoxServerIp(boombox, station);
+
+                player.ChatMessage(boombox.ToEntity().DesiredPower().ToString());
+
+                if (config.BoomboxDeployedReqPower)
+                    if (boombox.ToEntity().currentEnergy == boombox.PowerUsageWhilePlaying)
+                        boombox.BoxController.ServerTogglePlay(true);
+                else
+                    boombox.BoxController.ServerTogglePlay(true);
             }
             else
             {
