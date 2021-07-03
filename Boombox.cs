@@ -7,6 +7,7 @@ using System;
 using Oxide.Core;
 using System.Text.RegularExpressions;
 using System.Text;
+using System.Linq;
 
 namespace Oxide.Plugins
 {
@@ -19,7 +20,7 @@ namespace Oxide.Plugins
         private const string AdminUsePerm = "boombox.admin";
 
         private PropertyInfo _serverIpinfo = typeof(BoomBox).GetProperty("CurrentRadioIp");
-        Settings config;
+        private PluginConfig _config;
 
         Regex limitedURLS;
         string presetStationsList;
@@ -45,9 +46,10 @@ namespace Oxide.Plugins
             AddCovalenceCommand("stations", nameof(stationsCMD));
             AddCovalenceCommand("station", nameof(stationCMD));
 
-
+            _config = Config.ReadObject<PluginConfig>();
         }
 
+        /*
         private class Settings
         {
             [JsonProperty(PropertyName = "Whitelist")]
@@ -70,6 +72,8 @@ namespace Oxide.Plugins
                 { "Pop Hits", "https://rfcmedia.streamguys1.com/newpophitspremium.mp3" }
             };
         }
+        */
+        protected override void LoadDefaultConfig() => _config = GetDefaultConfig();
 
         protected override void LoadConfig()
         {
@@ -77,21 +81,32 @@ namespace Oxide.Plugins
 
             try
             {
-                config = Config.ReadObject<Settings>();
-                if (config == null) throw new Exception();
+                _config = Config.ReadObject<PluginConfig>();
+
+                if (_config == null)
+                {
+                    throw new JsonException();
+                }
+
+                if (!_config.ToDictionary().Keys.SequenceEqual(Config.ToDictionary(x => x.Key, x => x.Value).Keys))
+                {
+                    PrintWarning($"PluginConfig file {Name}.json updated.");
+
+                    SaveConfig();
+                }
             }
             catch
             {
-                Config.WriteObject(config, false, $"{Interface.Oxide.ConfigDirectory}/{Name}.jsonError");
-                PrintError("The configuration for Discord Authentication seems to contain and error and was replaced with the default configuration, your previous configuration has been renamed with a .jsonError extension!");
                 LoadDefaultConfig();
+
+                PrintError("Config file contains an error and has been replaced with the default file.");
             }
 
-            limitedURLS = new Regex($@"^(http||https):\/\/({ String.Join("|", config.WhitelistedDomains) }).*", RegexOptions.Compiled);
+            limitedURLS = new Regex($@"^(http||https):\/\/({ String.Join("|", _config.WhitelistedDomains) }).*", RegexOptions.Compiled);
             StringBuilder stationsBuilder = new StringBuilder("The following stations we have are below!\n\n");
 
             int index = 1;
-            foreach (var item in config.PresetStations)
+            foreach (var item in _config.PresetStations)
             {
                 stationsBuilder.Append(index.ToString()).Append(". ").AppendLine(item.Key);
 
@@ -104,9 +119,46 @@ namespace Oxide.Plugins
 
             presetStationsList = stationsBuilder.ToString();
         }
-        protected override void LoadDefaultConfig() => config = new Settings();
 
-        protected override void SaveConfig() => Config.WriteObject(config);
+        protected override void SaveConfig() => Config.WriteObject(_config, true);
+
+        private class PluginConfig
+        {
+            [JsonProperty(PropertyName = "Whitelist", Order = 0)]
+            public bool Whitelist { get; set; }
+
+            [JsonProperty(PropertyName = "Whitelisted Domains", Order = 1)]
+            public List<string> WhitelistedDomains { get; set; }
+
+            [JsonProperty(PropertyName = "Boombox Deployed Require Power", Order = 2)]
+            public bool BoomboxDeployedReqPower { get; set; }
+
+            [JsonProperty(PropertyName = "Preset Stations", Order = 3)]
+            public Dictionary<string, string> PresetStations { get; set; }
+
+            public string ToJson() => JsonConvert.SerializeObject(this);
+
+            public Dictionary<string, object> ToDictionary() => JsonConvert.DeserializeObject<Dictionary<string, object>>(ToJson());
+        }
+
+        private PluginConfig GetDefaultConfig()
+        {
+            return new PluginConfig
+            {
+                Whitelist = true,
+                WhitelistedDomains = new List<string>()
+                {
+                    "stream.zeno.fm"
+                },
+                BoomboxDeployedReqPower = true,
+                PresetStations = new Dictionary<string, string>()
+                {
+                    { "Country Hits", "http://crystalout.surfernetwork.com:8001/KXBZ_MP3" },
+                    { "Todays Hits", "https://rfcmedia.streamguys1.com/MusicPulsePremium.mp3" },
+                    { "Pop Hits", "https://rfcmedia.streamguys1.com/newpophitspremium.mp3" }
+                }
+            };
+        }
 
         private void stationsCMD(IPlayer player, string cmd, string[] args)
         {
@@ -159,7 +211,7 @@ namespace Oxide.Plugins
             if (!args[0].StartsWith("http"))
                 args[0] = $"https://{args[0]}";
 
-            if (config.Whitelist && !limitedURLS.IsMatch(args[0]) && !IsAdministrator(player.Object as BasePlayer))
+            if (_config.Whitelist && !limitedURLS.IsMatch(args[0]) && !IsAdministrator(player.Object as BasePlayer))
             {
                 player.Reply("You must use an accepted URL/Domain");
                 return;
@@ -193,7 +245,7 @@ namespace Oxide.Plugins
                 boombox.BoxController.ServerTogglePlay(false);
                 SetBoomBoxServerIp(boombox, station);
 
-                if (config.BoomboxDeployedReqPower)
+                if (_config.BoomboxDeployedReqPower)
                 {
                     if (boombox.ToEntity().currentEnergy >= boombox.PowerUsageWhilePlaying)
                         boombox.BoxController.ServerTogglePlay(true);
