@@ -44,6 +44,8 @@ namespace Oxide.Plugins
             AddCovalenceCommand("boombox", nameof(boomboxCMD));
             AddCovalenceCommand("stations", nameof(stationsCMD));
             AddCovalenceCommand("station", nameof(stationCMD));
+
+            
         }
 
         private class Settings
@@ -108,7 +110,7 @@ namespace Oxide.Plugins
 
         private void stationsCMD(IPlayer player, string cmd, string[] args)
         {
-            if (!permission.UserHasPermission(player.Id, StationUsePerm) && !player.IsAdmin)
+            if (!permission.UserHasPermission(player.Id, StationUsePerm) && !IsAdministrator(player.Object as BasePlayer))
             {
                 player.Reply("You do not have permission to use this command!");
                 return;
@@ -119,7 +121,7 @@ namespace Oxide.Plugins
 
         private void stationCMD(IPlayer player, string cmd, string[] args)
         {
-            if (!permission.UserHasPermission(player.Id, StationUsePerm) && !player.IsAdmin)
+            if (!permission.UserHasPermission(player.Id, StationUsePerm) && !IsAdministrator(player.Object as BasePlayer))
             {
                 player.Reply("You do not have permission to use this command!");
                 return;
@@ -134,14 +136,15 @@ namespace Oxide.Plugins
                 return;
             }
 
-            switchStation(player.Object as BasePlayer, stationURL);
+            bool stationSwtich = switchStation(player.Object as BasePlayer, stationURL);
 
-            player.Reply($"You are listening to station [#ffcc00]#{index} ({stationsNumberedName[index]})[/#]!");
+            if (stationSwtich)
+                player.Reply($"You are listening to station [#ffcc00]#{index} ({stationsNumberedName[index]})[/#]!");
         }
 
         private void boomboxCMD(IPlayer player, string cmd, string[] args)
         {
-            if (!permission.UserHasPermission(player.Id, UsePerm) && !player.IsAdmin)
+            if (!permission.UserHasPermission(player.Id, UsePerm) && !IsAdministrator(player.Object as BasePlayer))
             {
                 player.Reply("You do not have permission to use this command!");
                 return;
@@ -156,20 +159,20 @@ namespace Oxide.Plugins
             if (!args[0].StartsWith("http"))
                 args[0] = $"https://{args[0]}";
 
-            if (config.Whitelist && !limitedURLS.IsMatch(args[0]) && !permission.UserHasPermission(player.Id, AdminUsePerm) && !player.IsAdmin)
+            if (config.Whitelist && !limitedURLS.IsMatch(args[0]) && !IsAdministrator(player.Object as BasePlayer))
             {
                 player.Reply("You must use an accepted URL/Domain");
                 return;
             }
 
-            switchStation(player.Object as BasePlayer, args[0]);
+            bool stationSwitch = switchStation(player.Object as BasePlayer, args[0]);
 
-            player.Reply($"You are now streaming audio from URL:\n[#ffcc00]{args[0]}[/#]");
+            if (stationSwitch)
+                player.Reply($"You are now streaming audio from URL:\n[#ffcc00]{args[0]}[/#]");
         }
 
-        private void switchStation(BasePlayer player, string station)
+        private bool switchStation(BasePlayer player, string station)
         {
-
             Item heldItem = player.GetActiveItem();
 
             if (heldItem == null || heldItem.info.shortname != "fun.boomboxportable")
@@ -178,7 +181,13 @@ namespace Oxide.Plugins
                 if (!IsLookingAtBoomBox(player, out boombox))
                 {
                     player.ChatMessage("You must be holding or looking at a boombox!");
-                    return;
+                    return false;
+                }
+
+                if (!player.IsBuildingAuthed() && !IsAdministrator(player))
+                {
+                    player.ChatMessage("You must have building priviledge to change this boombox station!");
+                    return false;
                 }
 
                 boombox.BoxController.ServerTogglePlay(false);
@@ -186,7 +195,7 @@ namespace Oxide.Plugins
 
                 if (config.BoomboxDeployedReqPower)
                 {
-                    if (boombox.ToEntity().currentEnergy == boombox.PowerUsageWhilePlaying)
+                    if (boombox.ToEntity().currentEnergy >= boombox.PowerUsageWhilePlaying)
                         boombox.BoxController.ServerTogglePlay(true);
                 }                    
                 else
@@ -200,6 +209,16 @@ namespace Oxide.Plugins
                 SetBoomBoxServerIp(heldBoombox, station);
                 heldBoombox.ServerTogglePlay(true);
             }
+
+            return true;
+        }
+
+        private bool IsAdministrator(BasePlayer player)
+        {
+            if (!permission.UserHasPermission(player.UserIDString, AdminUsePerm) && !player.IsAdmin)
+                return false;
+
+            return true;
         }
 
         private bool IsLookingAtBoomBox(BasePlayer player, out DeployableBoomBox boombox)
