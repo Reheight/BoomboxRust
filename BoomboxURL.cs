@@ -37,7 +37,7 @@ namespace Oxide.Plugins
         private void Init()
         {
             permission.RegisterPermission(UsePerm, this);
-            permission.RegisterPermission(StationsUsePerm, this);
+            permission.RegisterPermission(StationUsePerm, this);
             AddCovalenceCommand("boombox", nameof(boomboxCMD));
             AddCovalenceCommand("stations", nameof(stationsCMD));
             AddCovalenceCommand("station", nameof(stationCMD));
