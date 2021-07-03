@@ -45,7 +45,7 @@ namespace Oxide.Plugins
             AddCovalenceCommand("stations", nameof(stationsCMD));
             AddCovalenceCommand("station", nameof(stationCMD));
 
-            
+
         }
 
         private class Settings
@@ -130,13 +130,13 @@ namespace Oxide.Plugins
             int index;
             string stationURL;
 
-            if (!int.TryParse(args[0], out index) || !stationsNumbered.TryGetValue(index, out stationURL))
+            if (args.Length <= 0 || !int.TryParse(args[0], out index) || !stationsNumbered.TryGetValue(index, out stationURL))
             {
                 player.Reply("You must input a number that correlated to a station!");
                 return;
             }
 
-            bool stationSwtich = SwitchStation(player.Object as BasePlayer, stationURL);
+            bool stationSwtich = switchStation(player.Object as BasePlayer, stationURL);
 
             if (stationSwtich)
                 player.Reply($"You are listening to station [#ffcc00]#{index} ({stationsNumberedName[index]})[/#]!");
@@ -165,13 +165,13 @@ namespace Oxide.Plugins
                 return;
             }
 
-            bool stationSwitch = SwitchStation(player.Object as BasePlayer, args[0]);
+            bool stationSwitch = switchStation(player.Object as BasePlayer, args[0]);
 
             if (stationSwitch)
                 player.Reply($"You are now streaming audio from URL:\n[#ffcc00]{args[0]}[/#]");
         }
 
-        private bool SwitchStation(BasePlayer player, string station)
+        private bool switchStation(BasePlayer player, string station)
         {
             Item heldItem = player.GetActiveItem();
 
@@ -197,7 +197,7 @@ namespace Oxide.Plugins
                 {
                     if (boombox.ToEntity().currentEnergy >= boombox.PowerUsageWhilePlaying)
                         boombox.BoxController.ServerTogglePlay(true);
-                }                    
+                }
                 else
                     boombox.BoxController.ServerTogglePlay(true);
             }
