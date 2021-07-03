@@ -136,7 +136,7 @@ namespace Oxide.Plugins
                 return;
             }
 
-            bool stationSwtich = switchStation(player.Object as BasePlayer, stationURL);
+            bool stationSwtich = SwitchStation(player.Object as BasePlayer, stationURL);
 
             if (stationSwtich)
                 player.Reply($"You are listening to station [#ffcc00]#{index} ({stationsNumberedName[index]})[/#]!");
@@ -165,13 +165,13 @@ namespace Oxide.Plugins
                 return;
             }
 
-            bool stationSwitch = switchStation(player.Object as BasePlayer, args[0]);
+            bool stationSwitch = SwitchStation(player.Object as BasePlayer, args[0]);
 
             if (stationSwitch)
                 player.Reply($"You are now streaming audio from URL:\n[#ffcc00]{args[0]}[/#]");
         }
 
-        private bool switchStation(BasePlayer player, string station)
+        private bool SwitchStation(BasePlayer player, string station)
         {
             Item heldItem = player.GetActiveItem();
 
