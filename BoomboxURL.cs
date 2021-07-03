@@ -15,6 +15,7 @@ namespace Oxide.Plugins
     public class BoomboxURL : RustPlugin
     {
         private const string UsePerm = "boomboxurl.use";
+        private const string StationUsePerm = "boomboxurl.stationsuse";
 
         private PropertyInfo _serverIpinfo = typeof(BoomBox).GetProperty("CurrentRadioIp");
         Settings config;
@@ -36,6 +37,7 @@ namespace Oxide.Plugins
         private void Init()
         {
             permission.RegisterPermission(UsePerm, this);
+            permission.RegisterPermission(StationsUsePerm, this);
             AddCovalenceCommand("boombox", nameof(boomboxCMD));
             AddCovalenceCommand("stations", nameof(stationsCMD));
             AddCovalenceCommand("station", nameof(stationCMD));
@@ -99,11 +101,23 @@ namespace Oxide.Plugins
 
         private void stationsCMD(IPlayer player, string cmd, string[] args)
         {
+            if (!permission.UserHasPermission(player.Id, StationUsePerm) && !player.IsAdmin)
+            {
+                player.Reply("You do not have permission to use this command!");
+                return;
+            }
+
             player.Reply(presetStationsList);
         }
 
         private void stationCMD(IPlayer player, string cmd, string[] args)
         {
+            if (!permission.UserHasPermission(player.Id, StationUsePerm) && !player.IsAdmin)
+            {
+                player.Reply("You do not have permission to use this command!");
+                return;
+            }
+
             int index;
             string stationURL;
 
