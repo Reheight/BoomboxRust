@@ -17,6 +17,8 @@ boombox.stationsuse - (/stations, /station)
   
 boombox.customurluse - (/boombox)
   
+boombox.admin - Allows you to use any URL for /boombox and bypass the whitelist while also allowing you to use every command.
+  
 ## Configuration
 ```json
 {
