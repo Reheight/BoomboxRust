@@ -14,7 +14,7 @@ namespace Oxide.Plugins
     [Description("Allows players to easily set the url of a boombox.")]
     public class BoomboxURL : RustPlugin
     {
-        private const string UsePerm = "boomboxurl.use";
+        private const string UsePerm = "boomboxurl.customurluse";
         private const string StationUsePerm = "boomboxurl.stationsuse";
 
         private PropertyInfo _serverIpinfo = typeof(BoomBox).GetProperty("CurrentRadioIp");
