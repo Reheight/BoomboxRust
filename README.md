@@ -23,6 +23,7 @@ boombox.customurluse - (/boombox)
   "Whitelisted Domains": [
     "stream.zeno.fm"
   ],
+  "Boombox Deployed Require Power": true,
   "Preset Stations": {
     "Country Hits": "http://crystalout.surfernetwork.com:8001/KXBZ_MP3",
     "Todays Hits": "https://rfcmedia.streamguys1.com/MusicPulsePremium.mp3",
