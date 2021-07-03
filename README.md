@@ -14,6 +14,7 @@ Allows you to change the station to any boombox via command.
   
 ## Permissions
 boombox.stationsuse - (/stations, /station)
+  
 boombox.customurluse - (/boombox)
   
 ## Configuration
