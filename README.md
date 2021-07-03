@@ -31,7 +31,9 @@ boombox.admin - Allows you to use any URL for /boombox and bypass the whitelist 
     "Country Hits": "http://crystalout.surfernetwork.com:8001/KXBZ_MP3",
     "Todays Hits": "https://rfcmedia.streamguys1.com/MusicPulsePremium.mp3",
     "Pop Hits": "https://rfcmedia.streamguys1.com/newpophitspremium.mp3"
-  }
+  },
+  "Deployed Boombox Never Decays": false,
+  "Handheld Boombox Never Breaks": false
 }
 ```
 | :warning: WARNING                                                              |
