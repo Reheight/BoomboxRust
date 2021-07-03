@@ -16,7 +16,7 @@ namespace Oxide.Plugins
     {
         private const string UsePerm = "boombox.customurluse";
         private const string StationUsePerm = "boombox.stationsuse";
-        private const string AdminUsePerm = "boombox.ad,om";
+        private const string AdminUsePerm = "boombox.admin";
 
         private PropertyInfo _serverIpinfo = typeof(BoomBox).GetProperty("CurrentRadioIp");
         Settings config;
