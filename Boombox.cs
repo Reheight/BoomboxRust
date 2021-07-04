@@ -233,7 +233,12 @@ namespace Oxide.Plugins
                 if (_config.BoomboxDeployedReqPower)
                 {
                     if (boombox.ToEntity().currentEnergy >= boombox.PowerUsageWhilePlaying)
-                        boombox.BoxController.ServerTogglePlay(true);
+                    {
+                        NextTick(() =>
+                        {
+                            boombox.BoxController.ServerTogglePlay(true);
+                        });
+                    }
                 }
                 else
                     boombox.BoxController.ServerTogglePlay(true);
