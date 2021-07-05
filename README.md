@@ -7,6 +7,10 @@ Allows you to change the station to any boombox via command.
 /station <number> - Will play a selected station from the stations list.
 
 /boombox <url> - Will play a custom audio source on the BoomBox.
+  
+/addstation "name" "URL" - Adds stations to the preset stations.
+
+/removestation "name" "URL" - Removes stations from the preset stations.
 
 | :boom: DANGER                                                                                                                                                                  |
 |:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -33,7 +37,8 @@ boombox.admin - Allows you to use any URL for /boombox and bypass the whitelist 
     "Pop Hits": "https://rfcmedia.streamguys1.com/newpophitspremium.mp3"
   },
   "Deployed Boombox Never Decays": false,
-  "Handheld Boombox Never Breaks": false
+  "Handheld Boombox Never Breaks": false,
+  "Microphone Stand Never Breaks": false
 }
 ```
 | :warning: WARNING                                                              |
