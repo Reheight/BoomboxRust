@@ -44,6 +44,8 @@ namespace Oxide.Plugins
             AddCovalenceCommand("boombox", nameof(boomboxCMD));
             AddCovalenceCommand("stations", nameof(stationsCMD));
             AddCovalenceCommand("station", nameof(stationCMD));
+            AddCovalenceCommand("addstation", nameof(addStationCMD));
+            AddCovalenceCommand("removestation", nameof(removeStationCMD));
 
             _config = Config.ReadObject<PluginConfig>();
         }
@@ -77,7 +79,19 @@ namespace Oxide.Plugins
                 PrintError("Config file contains an error and has been replaced with the default file.");
             }
 
+            BuildVars(false);
+        }
+
+        private void BuildVars(bool renewing)
+        {
             limitedURLS = new Regex($@"^(http||https):\/\/({ String.Join("|", _config.WhitelistedDomains) }).*", RegexOptions.Compiled);
+
+            if (renewing)
+            {
+                stationsNumbered.Clear();
+                stationsNumberedName.Clear();
+            }
+
             StringBuilder stationsBuilder = new StringBuilder("The following stations we have are below!\n\n");
 
             int index = 1;
@@ -117,6 +131,9 @@ namespace Oxide.Plugins
             [JsonProperty(PropertyName = "Handheld Boombox Never Breaks", Order = 5)]
             public bool HandheldBoomboxImmortal { get; set; }
 
+            [JsonProperty(PropertyName = "Microphone Stand Never Breaks", Order = 6)]
+            public bool MicrophoneStandImmortal { get; set; }
+
             public string ToJson() => JsonConvert.SerializeObject(this);
 
             public Dictionary<string, object> ToDictionary() => JsonConvert.DeserializeObject<Dictionary<string, object>>(ToJson());
@@ -139,7 +156,8 @@ namespace Oxide.Plugins
                     { "Pop Hits", "https://rfcmedia.streamguys1.com/newpophitspremium.mp3" }
                 },
                 DeployedBoomboxImmortal = false,
-                HandheldBoomboxImmortal = false
+                HandheldBoomboxImmortal = false,
+                MicrophoneStandImmortal = false
             };
         }
 
@@ -152,6 +170,65 @@ namespace Oxide.Plugins
             }
 
             player.Reply(presetStationsList);
+        }
+
+        private void addStationCMD(IPlayer player, string cmd, string[] args)
+        {
+            if (!permission.UserHasPermission(player.Id, AdminUsePerm) && !IsAdministrator(player.Object as BasePlayer))
+            {
+                player.Reply("You do not have permission to use this command!");
+                return;
+            }
+
+            if (args.Length < 2)
+            {
+                player.Reply("You must provide a valid radio station you'd like to add!" + "\n\n" + "<color=#ffcc00>Example:</color> /addstation \"Station Name\" \"URL\"");
+                return;
+            }
+
+            if (_config.PresetStations.ContainsKey(args[1]))
+            {
+                player.Reply($"There is already a station by the name of: <color=#ffcc00>{args[0]}</color>");
+                return;
+            }
+
+            _config.PresetStations.Add(args[0], args[1]);
+            SaveConfig();
+            BuildVars(true);
+
+            player.Reply($"You have successfully added <color=#ffcc00>{args[0]}</color>!");
+        }
+
+        private void removeStationCMD(IPlayer player, string cmd, string[] args)
+        {
+            if (!permission.UserHasPermission(player.Id, AdminUsePerm) && !IsAdministrator(player.Object as BasePlayer))
+            {
+                player.Reply("You do not have permission to use this command!");
+                return;
+            }
+
+            if (args.Length <= 0)
+            {
+                player.Reply("You must provide a valid radio station you'd like to remove!" + "\n\n" + "<color=#ffcc00>Example:</color> /addstation <ID>");
+                return;
+            }
+
+            int index;
+            string stationURL;
+
+            if (args.Length <= 0 || !int.TryParse(args[0], out index) || !stationsNumbered.TryGetValue(index, out stationURL))
+            {
+                player.Reply("You must input a number that correlated to a station!");
+                return;
+            }
+
+            string stationName = stationsNumberedName[index];
+
+            _config.PresetStations.Remove(stationName);
+            SaveConfig();
+            BuildVars(true);
+
+            player.Reply($"You have successfully removed station <color=#ffcc00>#{args[0]} ({stationName})</color>!");
         }
 
         private void stationCMD(IPlayer player, string cmd, string[] args)
@@ -225,8 +302,6 @@ namespace Oxide.Plugins
                     return false;
                 }
 
-
-
                 boombox.BoxController.ServerTogglePlay(false);
                 SetBoomBoxServerIp(boombox, station);
 
@@ -284,7 +359,20 @@ namespace Oxide.Plugins
 
             if (info.damageTypes.Has(Rust.DamageType.Decay))
             {
-                NextTick(() => boomBox.SetHealth(100f));
+                return true;
+            }
+
+            return null;
+        }
+
+        object OnEntityTakeDamage(MicrophoneStand microphoneStand, HitInfo info)
+        {
+            if (!_config.MicrophoneStandImmortal)
+                return null;
+
+            if (info.damageTypes.Has(Rust.DamageType.Decay))
+            {
+                return true;
             }
 
             return null;
